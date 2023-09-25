@@ -1,0 +1,10 @@
+{
+  "editor.fontFamily": "'Fira Code',Consolas, 'Courier New', monospace",
+  "editor.tabSize": 2,
+  "editor.fontSize": 16,
+  "clangd.fallbackFlags": [
+    "-std=c++11",
+    "-I/usr/local/include",
+    "-I/usr/include"
+  ]
+}
