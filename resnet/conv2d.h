@@ -15,7 +15,6 @@
 // padding: -1 -> same padding, 0 -> no padding, other positive nunber -> specified padding
 template <typename T>
 std::shared_ptr<Tensor> conv2d(const std::shared_ptr<Tensor> input, const std::shared_ptr<Tensor> kernel, const int stride, const int padding) {
-  // default shape and memory layout of input are both channel first
   assert(kernel->shape[kernel->ndim-1] == kernel->shape[kernel->ndim-2]);
   assert(input->shape[input->ndim-1] == input->shape[input->ndim-2]);
   int kernel_size = kernel->shape[kernel->ndim-1];
@@ -52,6 +51,10 @@ std::shared_ptr<Tensor> conv2d(const std::shared_ptr<Tensor> input, const std::s
   assert(typeid(T) == typeid(double) || typeid(T) == typeid(float) || typeid(T) == typeid(int32_t) || typeid(T) == typeid(int64_t));
   output->data = new T[get_tensor_nelem(output)]();
   
+  float* input_data = static_cast<float*>(input->data);
+  float* kernel_data = static_cast<float*>(kernel->data);
+  float* output_data = static_cast<float*>(output->data);
+
   int valid_start_index = padding_value;                    // 1
   int valid_end_index = padded_size - padding_value - 1;    // 28 - 1 - 1 = 26
   // convolution implementation
@@ -74,10 +77,10 @@ std::shared_ptr<Tensor> conv2d(const std::shared_ptr<Tensor> input, const std::s
             int input_index = channel * std::pow(input_size, 2) + input_i * input_size + input_j;
             // index of kernel data pointer
             int kernel_index = channel * std::pow(kernel_size, 2) + kernel_i * kernel_size + kernel_j;
-            sum += static_cast<T*>(input->data)[input_index] * static_cast<T*>(kernel->data)[kernel_index];
+            sum += input_data[input_index] * kernel_data[kernel_index];
           }
         }
-        static_cast<T*>(output->data)[output_offset] = sum;
+        output_data[output_offset] = sum;
         output_offset++;
       }
     }

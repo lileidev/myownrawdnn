@@ -9,4 +9,6 @@ struct JPeg {
   unsigned int channels;
 };
 
-JPeg read_jpeg_file(const char* jpeg_data, char *rgb_data, int size);
+JPeg read_jpeg_file(const char* jpeg_data, unsigned char *rgb_data, int size);
+
+bool write_jpeg_file(unsigned char* rgb_data, const char* file_name);

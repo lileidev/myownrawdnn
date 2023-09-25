@@ -20,8 +20,9 @@ int main(int argc, char **argv) {
   char *buffer = new char[length];
   ifs.read(buffer, length);
   std::shared_ptr<Tensor> input = std::make_shared<Tensor>();
-  char* rgb_data = new char[MAX_IMAGE_BYTES];
+  unsigned char* rgb_data = new unsigned char[MAX_IMAGE_BYTES];
   JPeg jpeg_info = read_jpeg_file(buffer, rgb_data, length);
+
   input->device = DeviceType::CPU;
   input->dtype = DataType::FLOAT;
   input->ndim = 3;
@@ -29,9 +30,11 @@ int main(int argc, char **argv) {
   input->shape[0] = jpeg_info.channels;
   input->shape[1] = jpeg_info.width;
   input->shape[2] = jpeg_info.height;
-  input->data = new float[get_tensor_nelem(input)];
-  input->data = memcpy(input->data, rgb_data, get_tensor_nelem(input) * sizeof(float));
-  delete [] rgb_data;
+  int input_nelem = get_tensor_nelem(input);
+  input->data = new float[input_nelem];
+  for (int i = 0; i < input_nelem; i++) {
+    static_cast<float*>(input->data)[i] = static_cast<float>(rgb_data[i]) / 255;
+  }
 
   std::shared_ptr<Tensor> kernel = std::make_shared<Tensor>();
   kernel->device = DeviceType::CPU;
@@ -49,11 +52,15 @@ int main(int argc, char **argv) {
 
   std::shared_ptr<Tensor> output = conv2d<float>(input, kernel, 1, 0);
 
-  size_t output_nelem = get_tensor_nelem(output);
-  for (int i = 0; i < output_nelem; i++) {
-    std::cout << static_cast<float*>(output->data)[i] << " ";
-  }
-  std::cout << std::endl;
+  int output_nelem = get_tensor_nelem(output);
+  // rgb_data = new unsigned char[output_nelem];
+  // for (int i = 0; i < output_nelem; i++) {
+  //   rgb_data[i] = static_cast<float*>(output->data)[i];
+  // }
+
+  write_jpeg_file(rgb_data, "1.jpg");
+
+  delete [] rgb_data;
 
   return 0;
 }
