@@ -1,7 +1,7 @@
 CC = g++
 CFLAGS = -g
 LDFLAGS = -ljpeg
-OBJS = main.o utils.o imread.o
+OBJS = main.o utils.o image.o
 TARGETS = main
 
 $(TARGETS): ${OBJS}

@@ -1,12 +1,12 @@
 #include "stdlib.h"
 #include "string.h"
-#include "imread.h"
+#include "image.h"
 
 #include <iostream>
 #include <cstdio>
 #include <jpeglib.h>
 
-JPeg read_jpeg_file(const char* jpeg_data, unsigned char *rgb_data, int size) {
+ImageInfo read_jpeg_file(const char* jpeg_data, unsigned char *rgb_data, int size) {
   struct jpeg_error_mgr jerr;
   struct jpeg_decompress_struct cinfo;
 
@@ -30,7 +30,7 @@ JPeg read_jpeg_file(const char* jpeg_data, unsigned char *rgb_data, int size) {
 
   delete [] buffer;
 
-  JPeg jpeg_info;
+  ImageInfo jpeg_info;
   jpeg_info.height = cinfo.image_height;
   jpeg_info.width = cinfo.image_width;
   jpeg_info.channels = cinfo.num_components;
@@ -38,7 +38,7 @@ JPeg read_jpeg_file(const char* jpeg_data, unsigned char *rgb_data, int size) {
   return jpeg_info;
 }
 
-bool write_jpeg_file(unsigned char* rgb_data, const char* file_name) {
+bool write_jpeg_file(unsigned char* rgb_data, const ImageInfo &image_info, const char* file_name) {
   jpeg_compress_struct cinfo;
   jpeg_error_mgr jerr;
 
@@ -53,9 +53,9 @@ bool write_jpeg_file(unsigned char* rgb_data, const char* file_name) {
   }
 
   jpeg_stdio_dest(&cinfo, pFile);
-  cinfo.image_height = 240;
-  cinfo.image_width = 240;
-  cinfo.input_components = 3;
+  cinfo.image_height = image_info.height;
+  cinfo.image_width = image_info.width;
+  cinfo.input_components = image_info.channels;
   cinfo.in_color_space = JCS_RGB;
   jpeg_set_defaults(&cinfo);
 
@@ -77,4 +77,25 @@ bool write_jpeg_file(unsigned char* rgb_data, const char* file_name) {
   pFile = nullptr;
 
   return 0;
+}
+
+void convert_rgb2plane(unsigned char* rgb_data, unsigned char* plane_data, const ImageInfo &image_info) {
+  int nelem_of_one_channel = image_info.height * image_info.width;
+  int nelem_of_image = nelem_of_one_channel * image_info.channels;
+  
+  for (int i = 0; i < nelem_of_image; i++) {
+    int index = (i / 3) + (i % 3) * nelem_of_one_channel;
+    *(plane_data + index) = *(rgb_data + i);
+  }
+}
+
+void convert_plane2rgb(unsigned char* plane_data, unsigned char* rgb_data, const ImageInfo &image_info) {
+  int nelem_of_one_channel = image_info.height * image_info.width;
+  int nelem_of_image = nelem_of_one_channel * image_info.channels;
+
+  for (int i = 0; i < nelem_of_image; i++) {
+    int index = i % nelem_of_one_channel * 3 + i / nelem_of_one_channel;\
+    *(rgb_data + index) = *(plane_data + i);
+  }
+  
 }
